@@ -2,6 +2,9 @@ import { GoogleGenAI, Type, FunctionDeclaration, GenerateContentResponse } from 
 import { ExtractionResult, AudienceExtractionResult, AdministrativeExtractionResult } from "../types";
 
 const apiKey = process.env.API_KEY || '';
+if (!apiKey) {
+    console.warn("API Key não encontrada em process.env.API_KEY. Verifique as variáveis de ambiente.");
+}
 const ai = new GoogleGenAI({ apiKey });
 
 // Helper robusto para limpar strings JSON que podem conter Markdown ou texto introdutório
@@ -10,15 +13,22 @@ const cleanJsonString = (text: string): string => {
         // Remove markdown code blocks se existirem
         let clean = text.replace(/```json/g, '').replace(/```/g, '');
         
-        // Encontra o primeiro '{' e o último '}'
+        // Encontra o primeiro '{' e o último '}' para objetos
         const startIndex = clean.indexOf('{');
         const endIndex = clean.lastIndexOf('}');
         
-        if (startIndex === -1 || endIndex === -1) {
-            return "{}";
+        if (startIndex !== -1 && endIndex !== -1) {
+             return clean.substring(startIndex, endIndex + 1);
         }
         
-        return clean.substring(startIndex, endIndex + 1);
+        // Se não encontrar objeto, tenta encontrar array
+        const startArr = clean.indexOf('[');
+        const endArr = clean.lastIndexOf(']');
+        if (startArr !== -1 && endArr !== -1) {
+            return clean.substring(startArr, endArr + 1);
+        }
+
+        return "{}";
     } catch (e) {
         return "{}";
     }
@@ -26,12 +36,18 @@ const cleanJsonString = (text: string): string => {
 
 // Helper to convert file to Base64
 export const fileToGenerativePart = async (file: File): Promise<{ inlineData: { data: string; mimeType: string } }> => {
+  if (!apiKey) {
+      throw new Error("Chave de API não configurada. Configure process.env.API_KEY no Netlify.");
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64String = reader.result as string;
-      // Remove data url prefix (e.g. "data:image/jpeg;base64,")
-      const base64 = base64String.includes(',') ? base64String.split(',')[1] : base64String;
+      
+      // Remove data url prefix (e.g. "data:application/pdf;base64,") completely
+      // This is crucial because standard split(',') might be fragile if the prefix format varies slightly
+      const base64 = base64String.substring(base64String.indexOf(',') + 1);
       
       // Forçar MIME type correto para PDFs se o navegador falhar ou enviar octet-stream
       let mimeType = file.type;

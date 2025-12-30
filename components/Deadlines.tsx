@@ -105,20 +105,36 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
     const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        setImportState({ status: 'processing', message: 'Analisando...' });
+        setImportState({ status: 'processing', message: 'Analisando arquivo...' });
+        
         try {
-            const result = file.type === 'application/pdf' ? await extractDeadlinesFromPdf(file) : await extractDeadlinesFromHtml(await file.text());
+            // Robust check for PDF: MIME type OR extension
+            const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+            
+            const result = isPdf 
+                ? await extractDeadlinesFromPdf(file) 
+                : await extractDeadlinesFromHtml(await file.text());
+                
             processImportResult(result);
-        } catch (error) { alert("Erro ao processar."); setImportState({ status: 'idle', message: '' }); }
+        } catch (error: any) { 
+            console.error("Erro na importação:", error);
+            // Show the actual error message to help debugging on Netlify
+            alert(`Erro ao processar: ${error.message || 'Falha desconhecida na API'}`); 
+            setImportState({ status: 'idle', message: '' }); 
+        }
     };
 
     const handleImportPaste = async () => {
         if (!pastedHtml) return;
-        setImportState({ status: 'processing', message: 'Processando...' });
+        setImportState({ status: 'processing', message: 'Processando texto...' });
         try {
             const result = await extractDeadlinesFromHtml(pastedHtml);
             processImportResult(result);
-        } catch (error) { alert("Erro."); setImportState({ status: 'idle', message: '' }); }
+        } catch (error: any) { 
+            console.error("Erro no paste:", error);
+            alert(`Erro ao processar texto: ${error.message}`); 
+            setImportState({ status: 'idle', message: '' }); 
+        }
     };
 
     const processImportResult = (result: any) => {
@@ -134,7 +150,7 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
             setImportState({ status: 'idle', message: '' });
         } else {
              setImportState({ status: 'idle', message: '' });
-             alert("Nada encontrado.");
+             alert("Nenhum processo foi identificado no arquivo. Verifique se é uma exportação válida do PROJUDI/SEEU.");
         }
     };
 

@@ -1,0 +1,8 @@
+{
+  "name": "Controle de Prazos - Nhamundá",
+  "description": "Sistema de controle de prazos para a Promotoria de Justiça de Nhamundá, integrado com ferramentas de análise, redação e pesquisa.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ]
+}

@@ -48,7 +48,7 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
   const urgentCount = activeDeadlines.filter(d => d.priority === 'Urgente').length;
   const nextAudiencesCount = audiences.filter(a => a.status === 'Agendada').length;
 
-  // Mock State para data de atualização e percentual (já que não temos backend)
+  // Mock State para data de atualização e percentual
   const [statsMeta, setStatsMeta] = useState({ 
       lastUpdate: new Date(), 
       trend: 2.5 
@@ -90,7 +90,7 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
       { name: 'Outros', value: others, fill: COLORS.gray },
   ];
 
-  // Data: Natureza (Classe) - Simplificada para Cível/Criminal/Adm
+  // Data: Natureza (Classe) - Simplificada
   let natureCounts = { Criminal: 0, Cível: 0, Infância: 0, Administrativo: 0 };
   activeDeadlines.forEach(d => {
       const txt = (d.proceduralClass + d.mainSubject).toLowerCase();
@@ -103,18 +103,18 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
     .map(([name, value]) => ({ name, value }))
     .filter(d => d.value > 0);
 
-  // Componente de Card KPI (Updated Layout)
+  // Componente de Card KPI
   const StatCard = ({ title, value, sub, icon: Icon, color, isMainKPI }: any) => (
-      <div className="bg-white rounded-[20px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 flex flex-col justify-between h-[160px] relative overflow-hidden group transition-all duration-300 hover:-translate-y-1">
+      <div className="bg-white rounded-[20px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col justify-between h-[160px] relative overflow-hidden group transition-all duration-300 hover:-translate-y-1">
           <div className="flex justify-between items-start z-10">
               <div className="flex-1">
                   <h3 className="text-sm font-bold text-[#86868B] uppercase tracking-widest mb-2">{title}</h3>
                   <div className="flex items-center">
                     <div className="text-5xl font-bold text-[#1D1D1F] tracking-tight leading-none">{value}</div>
                     
-                    {/* PERCENTUAL À DIREITA, CENTRALIZADO AO NÚMERO, MAIS AFASTADO (ml-5) */}
+                    {/* KPI Percentage */}
                     {isMainKPI && (
-                         <div className="ml-5 flex items-center gap-1.5 text-[#34C759] bg-[#34C759]/10 px-3 py-1 rounded-lg text-sm font-bold">
+                         <div className="ml-6 flex items-center gap-1.5 text-[#34C759] bg-[#34C759]/10 px-3 py-1 rounded-lg text-sm font-bold">
                               <ArrowUpRight size={16} strokeWidth={3} />
                               {statsMeta.trend.toLocaleString('pt-BR')}%
                          </div>
@@ -143,10 +143,10 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
   );
 
   return (
-    <div className="flex-1 overflow-y-auto bg-[#F5F5F7] p-6 md:p-8 animate-in fade-in duration-500 pb-24">
+    <div className="flex-1 h-full overflow-y-auto bg-[#F5F5F7] p-4 md:p-6 animate-in fade-in duration-500 pb-24 w-full">
         
         {/* Header */}
-        <div className="mb-8 flex justify-between items-end">
+        <div className="mb-6 flex justify-between items-end">
             <div>
                  <h2 className="text-3xl font-bold text-[#1D1D1F]">Visão Geral</h2>
             </div>
@@ -156,8 +156,8 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
             </div>
         </div>
 
-        {/* 1. KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-10">
+        {/* 1. KPI Cards - Responsive Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
             <StatCard 
                 title="Processos Ativos" 
                 value={activeDeadlines.length} 
@@ -190,16 +190,16 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
 
         {/* 
             2. Main Content Grid 
-            - Gráficos aumentados para ~220px de altura para acomodar fontes maiores
+            Usando w-full e gap ajustado para garantir encaixe perfeito 
         */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
             
-            {/* Left Column: 2x2 Grid of Charts */}
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Left Column: Charts */}
+            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* 1. Carga de Trabalho */}
-                <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 flex flex-col h-[220px]">
-                    <div className="flex items-center gap-2 mb-3 shrink-0">
+                <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col h-[230px]">
+                    <div className="flex items-center gap-2 mb-2 shrink-0">
                         <Briefcase size={18} className="text-[#86868B]"/>
                         <h3 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wide">Carga de Trabalho</h3>
                     </div>
@@ -212,20 +212,20 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
                                     dataKey="name" 
                                     type="category" 
                                     width={120} 
-                                    tick={{fontSize: 13, fill: '#1D1D1F', fontWeight: 600}} 
+                                    tick={{fontSize: 12, fill: '#1D1D1F', fontWeight: 600}} 
                                     axisLine={false} 
                                     tickLine={false}
                                 />
                                 <RechartsTooltip content={<CustomTooltip />} cursor={{fill: '#F5F5F7', radius: 4}} />
-                                <Bar dataKey="count" fill="#2c3e50" radius={[0, 4, 4, 0]} barSize={22} />
+                                <Bar dataKey="count" fill="#2c3e50" radius={[0, 4, 4, 0]} barSize={20} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 </div>
 
                 {/* 2. Status Prisional */}
-                <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 flex flex-col h-[220px]">
-                    <div className="flex items-center gap-2 mb-3 shrink-0">
+                <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col h-[230px]">
+                    <div className="flex items-center gap-2 mb-2 shrink-0">
                         <Clock size={18} className="text-[#86868B]"/>
                         <h3 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wide">Status Prisional</h3>
                     </div>
@@ -257,14 +257,14 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
                 </div>
 
                 {/* 3. Previsão de Prazos */}
-                <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 flex flex-col h-[220px]">
-                    <div className="flex items-center gap-2 mb-3 shrink-0">
+                <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col h-[230px]">
+                    <div className="flex items-center gap-2 mb-2 shrink-0">
                         <Calendar size={18} className="text-[#86868B]"/>
                         <h3 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wide">Previsão de Prazos</h3>
                     </div>
                     <div className="flex-1 w-full min-h-0">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={deadlineData} barSize={28}>
+                            <BarChart data={deadlineData} barSize={26}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={COLORS.lightGray} />
                                 <XAxis 
                                     dataKey="name" 
@@ -286,12 +286,12 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
                 </div>
 
                 {/* 4. Natureza Processual */}
-                <div className="bg-white rounded-[24px] p-6 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 flex flex-col h-[220px]">
-                    <div className="flex items-center gap-2 mb-3 shrink-0">
+                <div className="bg-white rounded-[24px] p-6 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col h-[230px]">
+                    <div className="flex items-center gap-2 mb-2 shrink-0">
                         <FileText size={18} className="text-[#86868B]"/>
                         <h3 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wide">Natureza Processual</h3>
                     </div>
-                    <div className="space-y-4 flex-1 overflow-y-auto pr-1 pt-1">
+                    <div className="space-y-4 flex-1 overflow-y-auto pr-1 pt-1 custom-scrollbar">
                         {natureData.map((d, i) => (
                             <div key={i}>
                                 <div className="flex justify-between text-sm font-semibold mb-1.5">
@@ -304,7 +304,7 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
                                     </span>
                                     <span className="text-[#86868B]">{d.value}</span>
                                 </div>
-                                <div className="w-full bg-[#F5F5F7] h-2.5 rounded-full overflow-hidden">
+                                <div className="w-full bg-[#F5F5F7] h-2 rounded-full overflow-hidden">
                                     <div 
                                         className="h-full rounded-full transition-all duration-1000"
                                         style={{ 
@@ -320,9 +320,10 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
 
             </div>
 
-            {/* Right Column: Processos Recentes (~470px height to match gaps) */}
-            <div className="lg:col-span-1 h-[472px]">
-                <div className="bg-white rounded-[24px] p-0 shadow-[0_4px_16px_rgba(0,0,0,0.04)] border border-black/5 flex flex-col h-full overflow-hidden">
+            {/* Right Column: Processos Recentes (SIMPLIFICADO) */}
+            {/* Altura ajustada para alinhar perfeitamente com 2 linhas de gráficos (230*2 + gap) */}
+            <div className="lg:col-span-1 h-[484px]">
+                <div className="bg-white rounded-[24px] p-0 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-black/5 flex flex-col h-full overflow-hidden">
                     <div className="p-5 border-b border-[#F5F5F7] flex justify-between items-center bg-[#F9F9F9]/50 shrink-0">
                         <h3 className="text-sm font-bold text-[#1D1D1F] uppercase tracking-wide flex items-center gap-2">
                             <TrendingUp size={18} /> Processos Recentes
@@ -333,27 +334,23 @@ const Dashboard: React.FC<DashboardProps> = ({ deadlines, audiences }) => {
                     </div>
                     <div className="flex-1 overflow-y-auto">
                         {activeDeadlines.slice(0, 10).map((d) => ( 
-                            <div key={d.id} className="p-5 border-b border-[#F5F5F7] hover:bg-[#F5F5F7]/50 transition-colors group cursor-pointer">
-                                <div className="flex justify-between items-start mb-2">
-                                    <span className="font-semibold text-[15px] text-[#1D1D1F] tracking-tight font-mono">{d.processNumber}</span>
-                                    {d.priority === 'Urgente' && <Siren size={16} className="text-[#FF3B30] animate-pulse"/>}
-                                </div>
-                                <div className="flex gap-2 mb-2">
-                                    <span className="text-[11px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 uppercase">{d.system}</span>
-                                    {d.defendantStatus === 'Réu Preso' && <span className="text-[11px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-100 uppercase">Réu Preso</span>}
-                                </div>
-                                <div className="text-[13px] text-[#86868B] mb-2 leading-relaxed line-clamp-2 font-medium">
-                                    {d.proceduralClass}
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-[#86868B]">
-                                    <Calendar size={14} />
-                                    <span>Vencimento: {new Date(d.endDate).toLocaleDateString()}</span>
+                            <div key={d.id} className="p-5 border-b border-[#F5F5F7] hover:bg-[#F5F5F7]/50 transition-colors cursor-pointer flex justify-between items-center">
+                                {/* Lado Esquerdo: Número e Tags */}
+                                <div className="flex flex-col gap-1.5 overflow-hidden">
+                                    <span className="font-semibold text-base text-[#1D1D1F] tracking-tight font-mono truncate">{d.processNumber}</span>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 uppercase">{d.system}</span>
+                                        {d.defendantStatus === 'Réu Preso' && <span className="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded border border-red-100 uppercase">Réu Preso</span>}
+                                    </div>
                                 </div>
                                 
-                                {/* Action Row on Hover */}
-                                <div className="hidden group-hover:flex items-center gap-4 mt-3 pt-3 border-t border-dashed border-gray-100 transition-all opacity-0 group-hover:opacity-100">
-                                    <button className="text-[11px] font-bold text-[#007AFF] hover:underline flex items-center gap-1 uppercase"><Briefcase size={14}/> Editar</button>
-                                    <button className="text-[11px] font-bold text-[#86868B] hover:underline flex items-center gap-1 uppercase"><Archive size={14}/> Arquivar</button>
+                                {/* Lado Direito: Data de Vencimento */}
+                                <div className="flex flex-col items-end gap-1 shrink-0 ml-2">
+                                     <span className="text-[10px] uppercase font-bold text-[#86868B]">Vencimento</span>
+                                     <div className={`flex items-center gap-1.5 font-bold ${new Date(d.endDate) < new Date() ? 'text-[#FF3B30]' : 'text-[#1D1D1F]'}`}>
+                                        <Calendar size={14} />
+                                        <span>{new Date(d.endDate).toLocaleDateString()}</span>
+                                     </div>
                                 </div>
                             </div>
                         ))}

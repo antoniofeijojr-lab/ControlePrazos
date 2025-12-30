@@ -45,7 +45,7 @@ const INITIAL_DEADLINES: Deadline[] = [
     endDate: new Date(2023, 10, 18), 
     priority: Priority.HIGH, 
     status: 'Pendente',
-    advisorStatus: 'Minuta Pronta',
+    advisorStatus: 'Minutado',
     advisorDraftType: 'Parecer',
     promoterDecision: 'Assinado',
     isArchived: true
@@ -64,7 +64,7 @@ const INITIAL_DEADLINES: Deadline[] = [
     endDate: new Date(2023, 10, 20), 
     priority: Priority.MEDIUM, 
     status: 'Em Análise',
-    advisorStatus: 'Em Correção',
+    advisorStatus: 'Minuta Refeita',
     promoterDecision: 'Devolvido',
     returnReason: 'Necessário complementar.',
     isArchived: false

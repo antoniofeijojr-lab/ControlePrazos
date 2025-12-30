@@ -37,7 +37,7 @@ export type PromoterDecision =
   | 'Protocolo de recursos'
   | 'Devolvido';
 
-export type AdvisorStatus = 'Pendente' | 'Minuta Pronta' | 'Em Correção';
+export type AdvisorStatus = 'Pendente' | 'Analisando' | 'Sem Minuta' | 'Minutado' | 'Minuta Refeita';
 
 export interface Deadline {
   id: string;

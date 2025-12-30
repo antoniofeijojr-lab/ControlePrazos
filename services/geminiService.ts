@@ -4,10 +4,23 @@ import { ExtractionResult, AudienceExtractionResult, AdministrativeExtractionRes
 const apiKey = process.env.API_KEY || '';
 const ai = new GoogleGenAI({ apiKey });
 
-// Helper to clean Markdown JSON blocks before parsing
+// Helper robusto para limpar strings JSON que podem conter Markdown ou texto introdutório
 const cleanJsonString = (text: string): string => {
-    let clean = text.replace(/```json/g, '').replace(/```/g, '');
-    return clean.trim();
+    try {
+        // Encontra o primeiro '{' e o último '}'
+        const startIndex = text.indexOf('{');
+        const endIndex = text.lastIndexOf('}');
+        
+        if (startIndex === -1 || endIndex === -1) {
+            // Se não encontrar estrutura JSON, retorna objeto vazio
+            return "{}";
+        }
+        
+        // Extrai apenas o conteúdo JSON válido
+        return text.substring(startIndex, endIndex + 1);
+    } catch (e) {
+        return "{}";
+    }
 };
 
 // Helper to convert file to Base64

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useMemo } from 'react';
 import { Deadline, ManifestationPurpose, AdvisorStatus, PromoterDecision, SystemType } from '../types';
 import { extractDeadlinesFromHtml, extractDeadlinesFromPdf } from '../services/geminiService';
-import { Upload, Search, Archive, Trash2, Edit, Save, X, Calendar, Undo2, Lock, MessageCircle, Copy, Check, AlertCircle } from 'lucide-react';
+import { Upload, Search, Archive, Trash2, Edit, Save, X, Calendar, Undo2, Lock, MessageCircle, Copy, Check, AlertCircle, Filter, RefreshCw } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface DeadlinesProps {
@@ -38,7 +38,16 @@ const ADVISOR_STATUS_OPTIONS: AdvisorStatus[] = [
 
 const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImport, onUpdate, onDelete }) => {
     const [viewMode, setViewMode] = useState<'active' | 'archived'>('active');
-    const [filters, setFilters] = useState({ term: '', priority: '', system: '' });
+    
+    // Advanced Filters State
+    const [filters, setFilters] = useState({ 
+        term: '', // Processo ou Assunto
+        system: '',
+        purpose: '',
+        advisor: '',
+        promoter: '',
+        endDate: '' 
+    });
     
     // Import State
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -62,9 +71,32 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
     const filteredDeadlines = useMemo(() => {
         const viewFiltered = deadlines.filter(d => viewMode === 'active' ? !d.isArchived : d.isArchived);
         return viewFiltered.filter(d => {
-            if (filters.term && !d.processNumber.includes(filters.term) && !d.mainSubject?.toLowerCase().includes(filters.term.toLowerCase())) return false;
-            if (filters.priority && d.priority !== filters.priority) return false;
+            // Text Search (Process or Subject)
+            if (filters.term && 
+                !d.processNumber.toLowerCase().includes(filters.term.toLowerCase()) && 
+                !d.mainSubject?.toLowerCase().includes(filters.term.toLowerCase())) {
+                return false;
+            }
+            
+            // System Filter
             if (filters.system && d.system !== filters.system) return false;
+
+            // Purpose Filter (Finalidade)
+            if (filters.purpose && d.manifestationPurpose !== filters.purpose) return false;
+
+            // Advisor Filter
+            if (filters.advisor && (d.advisorStatus || 'Pendente') !== filters.advisor) return false;
+
+            // Promoter Filter
+            if (filters.promoter && (d.promoterDecision || 'Pendente') !== filters.promoter) return false;
+
+            // End Date Filter
+            if (filters.endDate) {
+                const filterDate = new Date(filters.endDate).toISOString().split('T')[0];
+                const deadlineDate = new Date(d.endDate).toISOString().split('T')[0];
+                if (filterDate !== deadlineDate) return false;
+            }
+
             return true;
         });
     }, [deadlines, viewMode, filters]);
@@ -153,6 +185,9 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' });
     };
 
+    // Reset Filters
+    const clearFilters = () => setFilters({ term: '', system: '', purpose: '', advisor: '', promoter: '', endDate: '' });
+
     // Helper for Status Colors
     const getSystemColor = (sys: string) => {
         switch(sys) {
@@ -188,7 +223,6 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                 <div className="flex justify-between items-end">
                     <div>
                         <h2 className="text-2xl font-bold text-[#1D1D1F] tracking-tight">Prazos Judiciais</h2>
-                        <p className="text-[#86868B] font-medium mt-1 text-sm">Controle de expedientes e fluxo de trabalho.</p>
                     </div>
                     <div className="flex gap-3">
                          <div className="bg-[#E5E5EA] p-0.5 rounded-lg flex shadow-sm">
@@ -201,15 +235,64 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                     </div>
                 </div>
 
-                {/* Filters */}
-                <div className="bg-white p-2.5 rounded-xl border border-black/5 shadow-sm flex items-center gap-3 pl-4">
-                    <Search size={18} className="text-[#8E8E93]"/>
-                    <input 
-                        className="flex-1 bg-transparent outline-none text-sm text-[#1D1D1F] placeholder-[#8E8E93]"
-                        placeholder="Buscar por número, classe ou assunto..."
-                        value={filters.term}
-                        onChange={e => setFilters({...filters, term: e.target.value})}
-                    />
+                {/* Advanced Filters */}
+                <div className="bg-white p-3 rounded-xl border border-black/5 shadow-sm flex flex-col md:flex-row gap-3">
+                    {/* Search Term */}
+                    <div className="flex items-center gap-2 bg-[#F5F5F7] px-3 py-2 rounded-lg flex-1">
+                        <Search size={16} className="text-[#8E8E93]"/>
+                        <input 
+                            className="bg-transparent outline-none text-sm text-[#1D1D1F] placeholder-[#8E8E93] w-full"
+                            placeholder="Buscar por número ou assunto..."
+                            value={filters.term}
+                            onChange={e => setFilters({...filters, term: e.target.value})}
+                        />
+                    </div>
+                    
+                    {/* Filter Dropdowns */}
+                    <div className="flex flex-wrap gap-2 items-center">
+                        <select 
+                            className="bg-[#F5F5F7] text-sm text-[#1D1D1F] px-3 py-2 rounded-lg outline-none cursor-pointer border-r-[8px] border-transparent"
+                            value={filters.system}
+                            onChange={e => setFilters({...filters, system: e.target.value})}
+                        >
+                            <option value="">Sistema: Todos</option>
+                            <option value="PROJUDI">PROJUDI</option>
+                            <option value="SEEU">SEEU</option>
+                            <option value="MPV">MPV</option>
+                        </select>
+
+                        <select 
+                            className="bg-[#F5F5F7] text-sm text-[#1D1D1F] px-3 py-2 rounded-lg outline-none cursor-pointer border-r-[8px] border-transparent"
+                            value={filters.purpose}
+                            onChange={e => setFilters({...filters, purpose: e.target.value})}
+                        >
+                            <option value="">Finalidade: Todas</option>
+                            {MANIFESTATION_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+
+                         <select 
+                            className="bg-[#F5F5F7] text-sm text-[#1D1D1F] px-3 py-2 rounded-lg outline-none cursor-pointer border-r-[8px] border-transparent"
+                            value={filters.advisor}
+                            onChange={e => setFilters({...filters, advisor: e.target.value})}
+                        >
+                            <option value="">Assessoria: Todos</option>
+                            {ADVISOR_STATUS_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                        
+                        <input 
+                            type="date"
+                            className="bg-[#F5F5F7] text-sm text-[#1D1D1F] px-3 py-2 rounded-lg outline-none cursor-pointer"
+                            value={filters.endDate}
+                            onChange={e => setFilters({...filters, endDate: e.target.value})}
+                            title="Filtrar por Data Final"
+                        />
+                    </div>
+
+                    {(filters.term || filters.system || filters.purpose || filters.advisor || filters.promoter || filters.endDate) && (
+                        <button onClick={clearFilters} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition" title="Limpar Filtros">
+                            <RefreshCw size={18}/>
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -223,11 +306,11 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[100px]">Sistema</th>
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[240px]">Classe / Assunto</th>
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[120px]">Parte</th>
-                                <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[140px]">Finalidade</th>
+                                <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[150px]">Finalidade</th>
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[140px]">Assessoria</th>
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[140px]">Promotora</th>
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[110px]">Início</th>
-                                <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[110px]">Prazo Fatal</th>
+                                <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider w-[110px]">Final</th>
                                 <th className="p-4 text-sm font-bold text-[#86868B] uppercase tracking-wider text-right w-[120px]">Ações</th>
                             </tr>
                         </thead>
@@ -242,7 +325,7 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                                 return (
                                     <tr key={d.id} className="hover:bg-[#F5F5F7]/60 group transition-colors text-base">
                                         
-                                        {/* Processo (Copyable) */}
+                                        {/* Processo (Copyable) - Icon on Right, Text Left */}
                                         <td className="p-4 align-top">
                                             {isEditing ? (
                                                 <input 
@@ -252,12 +335,14 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                                                 />
                                             ) : (
                                                 <div 
+                                                    className="flex justify-between items-center group/copy cursor-pointer" 
                                                     onClick={() => handleCopyProcess(d.id, d.processNumber)}
-                                                    className="flex items-center gap-1.5 cursor-pointer text-[#1D1D1F] hover:text-[#007AFF] transition-colors group/copy font-medium"
-                                                    title="Clique para copiar"
+                                                    title="Clique para copiar número"
                                                 >
-                                                    {isCopied ? <Check size={16} className="text-green-500"/> : <Copy size={16} className="opacity-0 group-hover/copy:opacity-100 text-slate-400"/>}
-                                                    <span className="truncate">{d.processNumber}</span>
+                                                    <span className="font-medium text-[#1D1D1F] truncate group-hover/copy:text-blue-600 transition-colors">{d.processNumber}</span>
+                                                    <div className="text-[#007AFF] p-1 rounded transition-all">
+                                                        {isCopied ? <Check size={16} className="text-green-500"/> : <Copy size={16} className="opacity-0 group-hover/copy:opacity-100 text-slate-400"/>}
+                                                    </div>
                                                 </div>
                                             )}
                                         </td>
@@ -328,23 +413,32 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                                             )}
                                         </td>
 
-                                        {/* Finalidade */}
+                                        {/* Finalidade (Editável e Sem Borda) */}
                                         <td className="p-4 align-top">
-                                            {isEditing ? (
-                                                <select
-                                                    className="w-full border border-gray-300 rounded p-1.5 text-base bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
-                                                    value={editFormData!.manifestationPurpose}
-                                                    onChange={e => handleChange('manifestationPurpose', e.target.value)}
-                                                >
-                                                    {MANIFESTATION_OPTIONS.map(opt => (
-                                                        <option key={opt} value={opt}>{opt}</option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <span className="bg-slate-50 text-slate-700 px-2 py-1 rounded border border-slate-200 font-medium truncate block max-w-[120px] text-sm" title={d.manifestationPurpose}>
-                                                    {d.manifestationPurpose}
-                                                </span>
-                                            )}
+                                            <div className="relative">
+                                                {isEditing ? (
+                                                     <select
+                                                        className="w-full border border-gray-300 rounded p-1.5 text-base bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                                                        value={editFormData!.manifestationPurpose}
+                                                        onChange={e => handleChange('manifestationPurpose', e.target.value)}
+                                                    >
+                                                        {MANIFESTATION_OPTIONS.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                ) : (
+                                                    <select 
+                                                        className="appearance-none w-full bg-transparent text-slate-700 font-medium cursor-pointer outline-none border-none p-0 m-0"
+                                                        value={d.manifestationPurpose}
+                                                        onChange={(e) => handleStatusUpdate(d.id, 'manifestationPurpose', e.target.value)}
+                                                        title="Alterar Finalidade"
+                                                    >
+                                                        {MANIFESTATION_OPTIONS.map(opt => (
+                                                            <option key={opt} value={opt}>{opt}</option>
+                                                        ))}
+                                                    </select>
+                                                )}
+                                            </div>
                                         </td>
 
                                         {/* Status Assessoria (Editável ao Clicar) */}
@@ -394,7 +488,7 @@ const Deadlines: React.FC<DeadlinesProps> = ({ deadlines, activeDeadlines, onImp
                                             )}
                                         </td>
 
-                                        {/* Prazo Fatal */}
+                                        {/* Prazo Final */}
                                         <td className="p-4 align-top font-bold">
                                             {isEditing ? (
                                                 <input 

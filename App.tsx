@@ -187,37 +187,20 @@ const App: React.FC = () => {
                 <Scale size={20} />
               </div>
 
-              {/* Títulos com Hierarquia Visual e Tipografia Inter (AUMENTADO) */}
+              {/* Títulos com Hierarquia Visual e Tipografia Inter (AUMENTADO e SEM BOLINHA AZUL) */}
               <div className="flex flex-col justify-center">
-                  <h1 className="text-base md:text-lg font-bold tracking-wide text-[#1D1D1F] uppercase leading-tight">
+                  <h1 className="text-lg md:text-xl font-black tracking-wide text-[#1D1D1F] uppercase leading-tight">
                       PROMOTORIA DE JUSTIÇA DE NHAMUNDÁ
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#007AFF]"></div>
-                    <p className="text-sm font-medium text-[#86868B] tracking-normal leading-none">
-                        Controle de Prazos
-                    </p>
-                  </div>
+                  <p className="text-base font-medium text-[#86868B] tracking-normal leading-none mt-1">
+                      Controle de Prazos
+                  </p>
               </div>
           </div>
 
-          {/* Controles do Lado Direito */}
+          {/* Controles do Lado Direito (REMOVIDOS ÍCONES) */}
           <div className="flex items-center gap-4">
-             <div className="hidden md:flex items-center gap-2">
-                <button className="p-2 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-full transition-colors relative">
-                    <Bell size={20} />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                </button>
-                <button className="p-2 text-[#86868B] hover:text-[#1D1D1F] hover:bg-black/5 rounded-full transition-colors">
-                    <Settings size={20} />
-                </button>
-             </div>
-             <div className="w-px h-6 bg-gray-200 hidden md:block"></div>
-             <button className="flex items-center gap-2 md:pl-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-blue-400 flex items-center justify-center text-white text-xs font-bold shadow-sm ring-2 ring-white">
-                    JP
-                </div>
-             </button>
+             {/* Área vazia para manter espaçamento se necessário ou futuro uso */}
           </div>
       </header>
 

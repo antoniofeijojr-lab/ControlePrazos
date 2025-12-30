@@ -7,17 +7,18 @@ const ai = new GoogleGenAI({ apiKey });
 // Helper robusto para limpar strings JSON que podem conter Markdown ou texto introdutório
 const cleanJsonString = (text: string): string => {
     try {
+        // Remove markdown code blocks se existirem
+        let clean = text.replace(/```json/g, '').replace(/```/g, '');
+        
         // Encontra o primeiro '{' e o último '}'
-        const startIndex = text.indexOf('{');
-        const endIndex = text.lastIndexOf('}');
+        const startIndex = clean.indexOf('{');
+        const endIndex = clean.lastIndexOf('}');
         
         if (startIndex === -1 || endIndex === -1) {
-            // Se não encontrar estrutura JSON, retorna objeto vazio
             return "{}";
         }
         
-        // Extrai apenas o conteúdo JSON válido
-        return text.substring(startIndex, endIndex + 1);
+        return clean.substring(startIndex, endIndex + 1);
     } catch (e) {
         return "{}";
     }
@@ -30,11 +31,21 @@ export const fileToGenerativePart = async (file: File): Promise<{ inlineData: { 
     reader.onloadend = () => {
       const base64String = reader.result as string;
       // Remove data url prefix (e.g. "data:image/jpeg;base64,")
-      const base64 = base64String.split(',')[1];
+      const base64 = base64String.includes(',') ? base64String.split(',')[1] : base64String;
+      
+      // Forçar MIME type correto para PDFs se o navegador falhar ou enviar octet-stream
+      let mimeType = file.type;
+      if (file.name.toLowerCase().endsWith('.pdf')) {
+          mimeType = 'application/pdf';
+      } else if (!mimeType) {
+          // Fallback genérico
+          mimeType = 'application/pdf';
+      }
+
       resolve({
         inlineData: {
           data: base64,
-          mimeType: file.type
+          mimeType: mimeType
         }
       });
     };
@@ -273,6 +284,7 @@ export const transcribeVideo = async (file: File) => {
 // Shared Prompts Logic
 const getExtractionPrompt = (dataType: 'HTML' | 'PDF', content: string) => `
   Analise o ${dataType} fornecido e extraia os dados dos processos judiciais para um JSON estruturado.
+  Este é um documento legal exportado de sistemas como PROJUDI, SEEU ou MPV. Ignore cabeçalhos repetidos e rodapés de página.
   
   LÓGICA PRIORITÁRIA PARA DETECTAR FINALIDADE (detectedPurpose):
   O sistema de origem (PROJUDI/SEEU) exibe um padrão de contagem.
@@ -318,12 +330,14 @@ const getExtractionPrompt = (dataType: 'HTML' | 'PDF', content: string) => `
      - **manifestationPurpose**: 
        - Se a REGRA DE OURO (ex: "Ciência (16)") foi ativada, force este campo para ser igual ao detectedPurpose para TODOS os itens.
        - Caso contrário, escolha a melhor opção baseada no item individual: ['Manifestação', 'Ciência', 'Alegacões Finais', 'Oitiva', 'Parecer', 'Pendências de Incidentes', 'Razões/Contrarrazões', 'Análise de Juntadas', 'Promoção', 'Denúncia', 'Outros'].
+    
+     - **system**: Tente identificar o sistema de origem (PROJUDI, SEEU, MPV).
 
-  Conteúdo: ${content}
+  ${content}
 `;
 
 const getAudiencePrompt = () => `
-  Analise o documento visual (Pauta de Audiência) e extraia os dados para um JSON.
+  Analise o documento visual (Pauta de Audiência em PDF) e extraia os dados para um JSON.
   
   **INSTRUÇÕES CRÍTICAS DE PRECISÃO (OCR):**
   1. **Processo (processNumber):** 
@@ -349,7 +363,7 @@ const getAudiencePrompt = () => `
 `;
 
 const getAdministrativePrompt = (content: string) => `
-    Analise o texto fornecido (extraído do sistema MPV ou similar) e extraia os dados dos Processos Administrativos.
+    Analise o texto/PDF fornecido (extraído do sistema MPV ou similar) e extraia os dados dos Processos Administrativos.
 
     ESTRUTURA A SER EXTRAÍDA PARA CADA PROCESSO:
     1. **procedureNumber**: Ex: "Procedimento Preparatório Nº 254.2025.000022". Capture o texto completo.
@@ -500,7 +514,7 @@ export const extractDeadlinesFromHtml = async (htmlContent: string): Promise<Ext
 // 12. Extract Deadlines from PDF
 export const extractDeadlinesFromPdf = async (file: File): Promise<ExtractionResult> => {
     const pdfPart = await fileToGenerativePart(file);
-    const prompt = getExtractionPrompt('PDF', 'Analise o arquivo anexo.');
+    const prompt = getExtractionPrompt('PDF', 'Analise o arquivo PDF anexo para extrair a lista de processos e prazos.');
 
     const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',

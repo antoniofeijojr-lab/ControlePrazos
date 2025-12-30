@@ -14,8 +14,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isOpen, onClose
     { id: 'intranet', label: 'Início', icon: Globe },
     { id: 'deadlines', label: 'Prazos Judiciais', icon: ListTodo },
     { id: 'administrative', label: 'Administrativo', icon: FolderOpen },
-    { id: 'events', label: 'Eventos & Pauta', icon: CalendarClock },
-    { id: 'assistant', label: 'Assistente IA', icon: Bot },
+    { id: 'events', label: 'Eventos', icon: CalendarClock },
+    { id: 'assistant', label: 'Assistente Jurídico', icon: Bot },
     { id: 'tools', label: 'Ferramentas', icon: Map },
     { id: 'license', label: 'Licença', icon: Scale },
   ];
@@ -84,14 +84,18 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, isOpen, onClose
                 })}
             </nav>
             
-            <div className="p-5 border-t border-black/5 bg-[#F5F5F7]/30 backdrop-blur-md">
-                 <div className="flex items-center gap-3 opacity-60 hover:opacity-100 transition-opacity cursor-pointer">
-                    <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-500">
-                        v2.2
-                    </div>
-                    <div>
-                        <div className="text-xs font-bold text-[#1D1D1F]">Sistema Atualizado</div>
-                        <div className="text-[11px] text-[#86868B]">Engine: Gemini 2.0</div>
+            <div className="p-6 border-t border-black/5 bg-[#F5F5F7]/50 backdrop-blur-md flex flex-col gap-4">
+                 <div className="font-bold text-[#1D1D1F] text-sm">Versão 1.0</div>
+                 
+                 <div className="flex flex-col gap-2">
+                    <span className="text-[11px] text-[#86868B] font-medium leading-tight">
+                        Licenciado por<br/>Creative Commons
+                    </span>
+                    <div className="flex gap-1.5 opacity-80">
+                        <img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="CC" className="h-6 w-6" />
+                        <img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="BY" className="h-6 w-6" />
+                        <img src="https://mirrors.creativecommons.org/presskit/icons/nc.svg" alt="NC" className="h-6 w-6" />
+                        <img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="SA" className="h-6 w-6" />
                     </div>
                  </div>
             </div>

@@ -7,53 +7,58 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- Inter Font -->
+    <!-- Fonte Única: Inter (UI, Textos e Números) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
       :root {
-        --apple-blue: #007AFF;
-        --apple-gray: #F5F5F7;
-        --apple-sidebar: #FBFBFD;
-        --apple-text: #1D1D1F;
-        --apple-text-secondary: #86868B;
+        --primary-deep: #0F172A;
+        --accent-blue: #2563EB;
+        --bg-main: #F1F5F9;
+        --text-main: #1E293B;
+        --text-muted: #64748B;
+        --danger-deep: #991B1B;
+        --success-deep: #065F46;
       }
+      
+      * {
+        font-family: 'Inter', sans-serif !important;
+      }
+
       body {
-        /* Inter Font Stack for Minimalism */
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: var(--apple-gray);
-        color: var(--apple-text);
+        background-color: var(--bg-main);
+        color: var(--text-main);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        font-size: 16px; /* Base font increased significantly */
-        overflow-x: hidden; /* Crucial for preventing Netlify deploy layout shifts */
+        font-size: 15px;
+        overflow-x: hidden;
       }
       
-      /* Apple-style Custom Scrollbar */
       ::-webkit-scrollbar {
-        width: 0px;
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
         background: transparent;
       }
-      
-      /* Focus Ring */
-      *:focus-visible {
-        outline: 2px solid var(--apple-blue);
-        outline-offset: 2px;
+      ::-webkit-scrollbar-thumb {
+        background: #CBD5E1;
+        border-radius: 10px;
       }
-      
-      ::selection {
-        background-color: var(--apple-blue);
-        color: white;
+      ::-webkit-scrollbar-thumb:hover {
+        background: #94A3B8;
       }
       
       .glass-panel {
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        border-bottom: 1px solid #E2E8F0;
       }
+
+      .fade-in { animation: fadeIn 0.3s ease-in-out; }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
   <script type="importmap">
 {

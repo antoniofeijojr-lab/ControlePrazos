@@ -8,10 +8,9 @@ import AIAssistant from './components/AIAssistant';
 import Tools from './components/Tools';
 import LicenseView from './components/LicenseView';
 import Intranet from './components/Intranet';
-import { Deadline, SystemType, Priority, ManifestationPurpose, Audience, AdministrativeProcess } from './types';
-import { Menu, Scale, ShieldCheck, Bell, Settings, User } from 'lucide-react';
+import { Deadline, SystemType, Priority, Audience, AdministrativeProcess } from './types';
+import { Menu, Scale } from 'lucide-react';
 
-// Mock Data e Helpers mantidos
 const INITIAL_DEADLINES: Deadline[] = [
   { 
     id: '1', 
@@ -30,45 +29,7 @@ const INITIAL_DEADLINES: Deadline[] = [
     advisorStatus: 'Pendente',
     promoterDecision: 'Pendente',
     isArchived: false
-  },
-  { 
-    id: '2', 
-    processNumber: '0005678-22.2023.8.04.0001', 
-    system: SystemType.SEEU, 
-    proceduralClass: 'Execução da Pena (Regime Fechado)',
-    mainSubject: 'Progressão de Regime',
-    manifestationPurpose: 'Parecer',
-    defendantStatus: 'Réu Preso',
-    prosecutorOffice: 'Promotoria da Comarca de Nhamundá',
-    deadlineDuration: '10 dias corridos',
-    startDate: new Date(2023, 10, 8),
-    endDate: new Date(2023, 10, 18), 
-    priority: Priority.HIGH, 
-    status: 'Pendente',
-    advisorStatus: 'Minutado',
-    advisorDraftType: 'Parecer',
-    promoterDecision: 'Assinado',
-    isArchived: true
-  },
-  { 
-    id: '3', 
-    processNumber: 'MPV-2023-9988', 
-    system: SystemType.MPV, 
-    proceduralClass: 'Inquérito Civil (Improbidade)',
-    mainSubject: 'Improbidade Administrativa',
-    manifestationPurpose: 'Manifestação',
-    defendantStatus: 'Não Informado',
-    prosecutorOffice: 'Promotoria da Comarca de Nhamundá',
-    deadlineDuration: '30 dias',
-    startDate: new Date(2023, 9, 20),
-    endDate: new Date(2023, 10, 20), 
-    priority: Priority.MEDIUM, 
-    status: 'Em Análise',
-    advisorStatus: 'Minuta Refeita',
-    promoterDecision: 'Devolvido',
-    returnReason: 'Necessário complementar.',
-    isArchived: false
-  },
+  }
 ];
 
 const INITIAL_AUDIENCES: Audience[] = [
@@ -88,15 +49,16 @@ const INITIAL_AUDIENCES: Audience[] = [
 ];
 
 const dateReviver = (key: string, value: any) => {
-    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
-        return new Date(value);
+    // Tenta identificar strings que parecem datas e converte, lidando com formatos ISO e comuns
+    if (typeof value === 'string' && (key === 'startDate' || key === 'endDate' || key === 'date' || key === 'legalDeadline' || key === 'cnmpDeadline' || key === 'registrationDate')) {
+        const d = new Date(value);
+        return isNaN(d.getTime()) ? value : d;
     }
     return value;
 };
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('dashboard');
-  const [expectedCounts, setExpectedCounts] = useState<Record<string, number>>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const [deadlines, setDeadlines] = useState<Deadline[]>(() => {
@@ -127,15 +89,18 @@ const App: React.FC = () => {
   useEffect(() => { localStorage.setItem('promotoria-audiences', JSON.stringify(audiences)); }, [audiences]);
   useEffect(() => { localStorage.setItem('promotoria-admin-processes', JSON.stringify(adminProcesses)); }, [adminProcesses]);
 
-  const sortDeadlines = (items: Deadline[]) => [...items].sort((a, b) => a.endDate.getTime() - b.endDate.getTime());
+  const sortDeadlines = (items: Deadline[]) => [...items].sort((a, b) => {
+      const timeA = a.endDate instanceof Date ? a.endDate.getTime() : new Date(a.endDate).getTime();
+      const timeB = b.endDate instanceof Date ? b.endDate.getTime() : new Date(b.endDate).getTime();
+      return timeA - timeB;
+  });
+  
   const activeDeadlines = deadlines.filter(d => !d.isArchived);
 
-  // Handlers
-  const handleImportDeadlines = (newDeadlines: Deadline[], metadata?: any) => {
+  const handleImportDeadlines = (newDeadlines: Deadline[]) => {
     const uniqueBatch = newDeadlines.filter((item, index, self) => index === self.findIndex((t) => (t.processNumber.trim() === item.processNumber.trim())));
     const uniqueNewDeadlines = uniqueBatch.filter(newItem => !activeDeadlines.some(existingItem => existingItem.processNumber.trim() === newItem.processNumber.trim()));
     if (uniqueNewDeadlines.length > 0) setDeadlines(prev => sortDeadlines([...prev, ...uniqueNewDeadlines]));
-    if (metadata) setExpectedCounts(prev => ({ ...prev, [metadata.purpose]: Math.max(prev[metadata.purpose] || 0, metadata.total) }));
   };
 
   const handleUpdateDeadlines = (updatedItems: Deadline[]) => {
@@ -160,7 +125,7 @@ const App: React.FC = () => {
     switch(currentView) {
       case 'dashboard': return <Dashboard deadlines={deadlines} audiences={audiences} />;
       case 'intranet': return <Intranet />;
-      case 'deadlines': return <Deadlines deadlines={deadlines} activeDeadlines={activeDeadlines} onImport={handleImportDeadlines} onUpdate={handleUpdateDeadlines} onDelete={handleDeleteDeadline} expectedCounts={expectedCounts} isArchiveView={false} />;
+      case 'deadlines': return <Deadlines deadlines={deadlines} activeDeadlines={activeDeadlines} onImport={handleImportDeadlines} onUpdate={handleUpdateDeadlines} onDelete={handleDeleteDeadline} />;
       case 'administrative': return <Administrative processes={adminProcesses} onUpdate={handleUpdateAdmin} onDelete={handleDeleteAdmin} onImport={handleImportAdmin} />;
       case 'events': return <Events audiences={audiences} onImport={handleImportAudiences} onUpdate={handleUpdateAudiences} onDelete={handleDeleteAudience} />;
       case 'assistant': return <AIAssistant />;
@@ -171,9 +136,8 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F5F5F7] font-sans text-[#1D1D1F] selection:bg-[#007AFF] selection:text-white">
+    <div className="flex flex-col min-h-screen bg-[#F5F5F7] selection:bg-[#007AFF] selection:text-white">
       
-      {/* 1. Header Fixo no Topo (h-16 = 64px) */}
       <header className="glass-panel fixed top-0 left-0 right-0 h-16 z-50 px-6 md:px-8 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-4">
               <div className="md:hidden">
@@ -182,34 +146,24 @@ const App: React.FC = () => {
                 </button>
               </div>
               
-              {/* Ícone Minimalista */}
               <div className="hidden md:flex items-center justify-center w-10 h-10 bg-white rounded-xl shadow-sm border border-black/5 text-[#1D1D1F]">
                 <Scale size={20} />
               </div>
 
-              {/* Títulos com Hierarquia Visual e Tipografia Inter (AUMENTADO e SEM BOLINHA AZUL) */}
               <div className="flex flex-col justify-center">
-                  <h1 className="text-lg md:text-xl font-black tracking-wide text-[#1D1D1F] uppercase leading-tight">
+                  <h1 className="text-lg md:text-xl font-bold tracking-tight text-[#1D1D1F] uppercase leading-tight">
                       PROMOTORIA DE JUSTIÇA DE NHAMUNDÁ
                   </h1>
-                  <p className="text-base font-medium text-[#86868B] tracking-normal leading-none mt-1">
+                  <p className="text-sm font-medium text-[#86868B] tracking-normal leading-none mt-1">
                       Controle de Prazos
                   </p>
               </div>
           </div>
-
-          {/* Controles do Lado Direito (REMOVIDOS ÍCONES) */}
-          <div className="flex items-center gap-4">
-             {/* Área vazia para manter espaçamento se necessário ou futuro uso */}
-          </div>
+          <div className="flex items-center gap-4"></div>
       </header>
 
-      {/* 2. Container Principal (Deslocado 64px para baixo) */}
       <div className="flex flex-1 pt-16">
-          {/* Sidebar (Fixo à esquerda, abaixo do header) */}
           <Sidebar currentView={currentView} setView={setCurrentView} isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-          
-          {/* Área de Conteúdo (Margem esquerda da sidebar em Desktop) */}
           <div className="flex-1 md:ml-64 transition-all duration-300 relative">
               <main className="h-[calc(100vh-4rem)] overflow-hidden">
                 {renderView()}

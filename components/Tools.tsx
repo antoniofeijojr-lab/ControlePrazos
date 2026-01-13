@@ -68,10 +68,10 @@ const Tools: React.FC = () => {
                       setIsLoading(true);
                       try {
                           const text = await transcribeAudio(base64Audio, 'audio/webm');
-                          setTranscription(text || "Não foi possível transcrever.");
+                          setTranscription(text || "Não foi possível realizar a transcrição.");
                       } catch (err) {
                           console.error(err);
-                          setTranscription("Erro na transcrição. Tente novamente.");
+                          setTranscription("Erro no processamento do Sistema. Tente novamente.");
                       } finally {
                           setIsLoading(false);
                       }
@@ -207,7 +207,7 @@ const Tools: React.FC = () => {
                     {activeTab === 'audio' && (
                         <div className="flex flex-col items-center justify-center py-6 space-y-6">
                              <div className="bg-green-50 border border-green-100 p-4 rounded-lg text-sm text-green-800 text-left w-full">
-                                <p>Grave ditados ou reuniões rápidas. O áudio será processado automaticamente.</p>
+                                <p>Grave ditados ou reuniões rápidas. O áudio será processado automaticamente pelo Sistema.</p>
                             </div>
                             
                             <button 
@@ -234,7 +234,7 @@ const Tools: React.FC = () => {
                                     <AlertCircle size={20} className="shrink-0"/>
                                     <div>
                                         <p className="font-bold mb-1">Transcrição de Vídeo com Identificação de Interlocutores</p>
-                                        <p>Faça o upload do arquivo de vídeo (MP4, MOV) contendo a audiência ou reunião para realizar a transcrição. A inteligência artificial identificará automaticamente os diferentes falantes.</p>
+                                        <p>Faça o upload do arquivo de vídeo (MP4, MOV) contendo a audiência ou reunião para realizar a transcrição. O Sistema identificará automaticamente os diferentes falantes.</p>
                                     </div>
                                 </div>
                             </div>
@@ -263,7 +263,7 @@ const Tools: React.FC = () => {
                     {isLoading && (
                         <div className="py-8 flex flex-col items-center justify-center space-y-3 text-blue-600 animate-in fade-in">
                             <Loader2 className="animate-spin" size={32} />
-                            <span className="font-medium">Processando com Inteligência Artificial...</span>
+                            <span className="font-medium">O Sistema está processando as informações...</span>
                         </div>
                     )}
 
